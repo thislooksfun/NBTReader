@@ -50,7 +50,6 @@ public class NBTReader
 		
 		this.network = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
 		this.network.registerMessage(PacketReaderInfo.Handler.class, PacketReaderInfo.class, 0, Side.SERVER);
-		this.network.registerMessage(PacketReaderInfo.Handler.class, PacketReaderInfo.class, 1, Side.CLIENT);
 	}
 	
 	@Mod.EventHandler
@@ -61,7 +60,7 @@ public class NBTReader
 	}
 	
 	@Mod.EventHandler
-	@SuppressWarnings("UnusedParameters")
+	@SuppressWarnings({"UnusedParameters", "EmptyMethod"})
 	public void postInit(FMLPostInitializationEvent event) {}
 	
 	public static NBTReader instance()

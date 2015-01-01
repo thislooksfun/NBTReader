@@ -123,7 +123,6 @@ public class GuiReader extends GuiContainer
 		String fullStr = tag.toString();
 		ArrayList<String> arr = new ArrayList<String>();
 		int indentLevel = 0;
-		int lastIndex = 0;
 		boolean isInString = false;
 
 //		fullStr = fullStr.substring(1, fullStr.length()-1).replace("\n", "\\n");
@@ -165,7 +164,6 @@ public class GuiReader extends GuiContainer
 						
 						arr.add(repeat(" ", indentLevel) + c);
 						
-						lastIndex = i + 1;
 						indentLevel++;
 						s = "";
 					} else if (c == '}' || c == ']')
@@ -176,7 +174,6 @@ public class GuiReader extends GuiContainer
 						}
 						indentLevel--;
 						arr.add(repeat(" ", indentLevel) + c);
-						lastIndex = i + 1;
 						s = "";
 					} else if (c == ',')
 					{
@@ -184,7 +181,6 @@ public class GuiReader extends GuiContainer
 						{
 							arr.add(repeat(" ", indentLevel) + s);
 						}
-						lastIndex = i + 1;
 						s = "";
 					} else
 					{
@@ -225,6 +221,7 @@ public class GuiReader extends GuiContainer
 		this.drawString(this.fontRendererObj, ColorHelper.limitToLengthExcludingCodes(s, maxWidth), left, top, Colors.WHITE);
 	}
 	
+	@Override
 	public void handleMouseInput()
 	{
 		super.handleMouseInput();

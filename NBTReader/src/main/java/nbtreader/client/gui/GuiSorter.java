@@ -3,11 +3,13 @@ package nbtreader.client.gui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 
 import nbtreader.common.NBTReader;
+import nbtreader.network.PacketReaderInfo;
 import nbtreader.tileentity.TileEntityNBTSorter;
 import nbtreader.util.ColorHelper;
 import nbtreader.util.Colors;
@@ -120,6 +122,7 @@ public class GuiSorter extends GuiScreen
 		this.drawString(this.fontRendererObj, ColorHelper.limitToLengthExcludingCodes(s, maxWidth), left, top, Colors.WHITE);
 	}
 	
+	@Override
 	public void handleMouseInput()
 	{
 		super.handleMouseInput();
@@ -159,7 +162,7 @@ public class GuiSorter extends GuiScreen
 				//MatchType button
 				this.te.matchType = !this.te.matchType;
 				this.buttonMatchType.displayString = this.te.matchType ? "Match: All" : "Match: Any";
-				this.te.updateMatchType();
+				
 				break;
 			case 1:
 				//In button
@@ -171,8 +174,6 @@ public class GuiSorter extends GuiScreen
 				
 				this.te.in = ForgeDirection.getOrientation(inDir);
 				this.buttonInDir.displayString = "In: " + this.te.in.name().substring(0, 1) + this.te.in.name().substring(1).toLowerCase();
-				
-				this.te.updateDirs();
 				
 				break;
 			case 2:
@@ -186,9 +187,17 @@ public class GuiSorter extends GuiScreen
 				this.te.out = ForgeDirection.getOrientation(outDir);
 				this.buttonOutDir.displayString = "Out: " + this.te.out.name().substring(0, 1) + this.te.out.name().substring(1).toLowerCase();
 				
-				this.te.updateDirs();
-				
 				break;
 		}
+	}
+	
+	@Override
+	public void onGuiClosed()
+	{
+		this.te.getPos().markForUpdate(false);
+		NBTTagCompound tag = new NBTTagCompound();
+		this.te.writeToNBT(tag);
+		NBTReader.network().sendToServer(new PacketReaderInfo(this.te.getPos(), tag));
+		super.onGuiClosed();
 	}
 }

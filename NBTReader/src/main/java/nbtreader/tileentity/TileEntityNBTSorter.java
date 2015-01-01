@@ -4,15 +4,18 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
 import java.util.ArrayList;
 
-import cpw.mods.fml.relauncher.Side;
-import nbtreader.common.NBTReader;
+import cpw.mods.fml.common.FMLCommonHandler;
 import nbtreader.network.PacketReaderInfo;
 import nbtreader.util.Coords;
 import nbtreader.util.LogHelper;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
 
 /**
@@ -39,9 +42,18 @@ public class TileEntityNBTSorter extends TileEntity
 		this.in = ForgeDirection.SOUTH;
 		this.out = ForgeDirection.NORTH;
 		
+//		ArrayList<String> arr = new ArrayList<String>();
+//		arr.add("pages");
+//		arr.add("0");
+//		arr.add("abcd");
+//		this.data.add(arr);
+		
 		ArrayList<String> arr = new ArrayList<String>();
-		arr.add("camelPackFill");
-		arr.add("100");
+		arr.add("asd");
+		arr.add("list");
+		arr.add("0");
+		arr.add("var");
+		arr.add("32.5");
 		this.data.add(arr);
 	}
 	
@@ -50,7 +62,6 @@ public class TileEntityNBTSorter extends TileEntity
 		if (this.pos == null && this.worldObj != null && this.yCoord > -1)
 		{
 			this.pos = new Coords(this.worldObj, this.xCoord, this.yCoord, this.zCoord);
-			this.updateClients();
 		}
 		
 		return this.pos;
@@ -87,7 +98,7 @@ public class TileEntityNBTSorter extends TileEntity
 				ItemStack s = invIn.getStackInSlot(slot);
 				if (s != null && this.stackMatches(s))
 				{
-					pulled = s;
+					pulled = s.copy();
 					pullSlot = slot;
 					break;
 				}
@@ -99,7 +110,7 @@ public class TileEntityNBTSorter extends TileEntity
 				ItemStack s = invIn.getStackInSlot(slot);
 				if (s != null && this.stackMatches(s))
 				{
-					pulled = s;
+					pulled = s.copy();
 					pullSlot = slot;
 					break;
 				}
@@ -116,6 +127,8 @@ public class TileEntityNBTSorter extends TileEntity
 		if (teOut == null || !(teOut instanceof IInventory)) return; //No TE or isn't an inventory!
 		IInventory invOut = ((IInventory)teOut);
 		
+		pulled.stackSize = 1;
+		
 		if (mergeStacks(invOut, pulled))
 		{
 			invIn.decrStackSize(pullSlot, 1);
@@ -124,10 +137,7 @@ public class TileEntityNBTSorter extends TileEntity
 	
 	private boolean mergeStacks(IInventory inv, ItemStack stack)
 	{
-		if (stack == null)
-		{
-			return false;
-		}
+		if (stack == null) return false;
 		
 		if (inv instanceof ISidedInventory)
 		{
@@ -138,7 +148,7 @@ public class TileEntityNBTSorter extends TileEntity
 				if (s != null && s.getItem() == stack.getItem() && s.stackSize + stack.stackSize <= s.getMaxStackSize())
 				{
 					s.stackSize += stack.stackSize;
-					inv.setInventorySlotContents(slot, s);
+//					inv.setInventorySlotContents(slot, s);
 					return true;
 				}
 			}
@@ -160,7 +170,7 @@ public class TileEntityNBTSorter extends TileEntity
 				if (s != null && s.getItem() == stack.getItem() && s.stackSize + stack.stackSize <= s.getMaxStackSize())
 				{
 					s.stackSize += stack.stackSize;
-					inv.setInventorySlotContents(i, s);
+//					inv.setInventorySlotContents(i, s);
 					return true;
 				}
 			}
@@ -182,113 +192,81 @@ public class TileEntityNBTSorter extends TileEntity
 	private boolean stackMatches(ItemStack stack)
 	{
 		if (!stack.hasTagCompound()) return false; //No tag == nothing to compare
-		NBTTagCompound tag = stack.getTagCompound();
 		
-		for (int j = 0; j < this.data.size(); j++)
+		for (int i = 0; i < this.data.size(); i++)
 		{
-			ArrayList<String> arr = this.data.get(j);
-			for (int i = 0; i < arr.size(); j++)
+			NBTBase currentTag = stack.getTagCompound().copy();
+			ArrayList<String> arr = this.data.get(i);
+			for (int j = 0; j < arr.size(); j++)
 			{
-				NBTBase b = tag.getTag(arr.get(j));
-				if (b != null)
+				if (currentTag instanceof NBTBase.NBTPrimitive || currentTag instanceof NBTTagString)
 				{
-					if (b instanceof NBTBase.NBTPrimitive || b instanceof NBTTagString)
+					if (j + 1 < arr.size()) return false; //Expected one more tag, found at least two
+					
+					if (currentTag instanceof NBTTagString)
+						return ((NBTTagString)currentTag).func_150285_a_().equals(arr.get(j));
+					
+					try
 					{
-						if (i + 1 >= arr.size()) return false; //Deeper tags expected, but not found
-						
-						if (b instanceof NBTTagString)
+						switch (currentTag.getId())
 						{
-							return arr.get(arr.size() - 1).equals(((NBTTagString)b).func_150285_a_());
+							case Constants.NBT.TAG_BYTE:
+								return ((NBTTagByte)currentTag).func_150290_f() == Byte.parseByte(arr.get(j));
+							case Constants.NBT.TAG_SHORT:
+								return ((NBTTagShort)currentTag).func_150289_e() == Short.parseShort(arr.get(j));
+							case Constants.NBT.TAG_LONG:
+								return ((NBTTagLong)currentTag).func_150291_c() == Long.parseLong(arr.get(j));
+							case Constants.NBT.TAG_FLOAT:
+								return ((NBTTagFloat)currentTag).func_150288_h() == Float.parseFloat(arr.get(j));
+							case Constants.NBT.TAG_DOUBLE:
+								return ((NBTTagDouble)currentTag).func_150286_g() == Double.parseDouble(arr.get(j));
 						}
-						
-						try
-						{
-							switch (b.getId())
-							{
-								case 1:
-									//Byte
-									return Byte.parseByte(arr.get(arr.size() - 1)) == ((NBTTagByte)b).func_150290_f();
-								case 2:
-									//Short
-									return Short.parseShort(arr.get(arr.size() - 1)) == ((NBTTagShort)b).func_150289_e();
-								case 3:
-									//Int
-									return Integer.parseInt(arr.get(arr.size() - 1)) == ((NBTTagInt)b).func_150287_d();
-								case 4:
-									//Long
-									return Long.parseLong(arr.get(arr.size() - 1)) == ((NBTTagLong)b).func_150291_c();
-								case 5:
-									//Float
-									return Float.parseFloat(arr.get(arr.size() - 1)) == ((NBTTagFloat)b).func_150288_h();
-								case 6:
-									//Double
-									return Double.parseDouble(arr.get(arr.size() - 1)) == ((NBTTagDouble)b).func_150286_g();
-							}
-						} catch (IllegalArgumentException e)
-						{
-							e.printStackTrace();
-							return false;
-						}
-					} else
+					} catch (IllegalArgumentException e)
 					{
-						if (i + 1 >= arr.size()) return false; //Deeper tags found, but not expected
-						
-						switch (b.getId())
-						{
-							case 7:
-								//ByteArray
-								break;
-							case 9:
-								//TagList
-								break;
-							case 10:
-								//Compound
-								break;
-							case 11:
-								//IntArray
-								break;
-						}
+						return false; //Wrong format (Probably not a number)
 					}
+				} else if (currentTag instanceof NBTTagByteArray)
+				{
+					if (j + 1 < arr.size()) return false;
+					try
+					{
+						return ((NBTTagByteArray)currentTag).func_150292_c()[Integer.parseInt(arr.get(j))] == Byte.parseByte(arr.get(j + 1));
+					} catch (IllegalArgumentException e)
+					{
+						return false;
+					}
+				} else if (currentTag instanceof NBTTagIntArray)
+				{
+					if (j + 1 < arr.size()) return false;
+					try
+					{
+						return ((NBTTagIntArray)currentTag).func_150302_c()[Integer.parseInt(arr.get(j))] == Integer.parseInt(arr.get(j + 1));
+					} catch (IllegalArgumentException e)
+					{
+						return false;
+					}
+				} else if (currentTag instanceof NBTTagList)
+				{
+					if (j + 1 >= arr.size()) return false;
+					
+					try
+					{
+						currentTag = ((NBTTagList)currentTag).removeTag(Integer.parseInt(arr.get(j)));
+					} catch (IllegalArgumentException e)
+					{
+						return false;
+					}
+				} else if (currentTag instanceof NBTTagCompound)
+				{
+					currentTag = ((NBTTagCompound)currentTag).getTag(arr.get(j));
+				} else
+				{
+					return false;
 				}
 			}
 		}
 		
 		return false;
-	}
-	
-	public void updateClients()
-	{
-		if (this.client()) return;
-		NBTReader.network().sendToAll(new PacketReaderInfo(this.getPos(), this.in, this.out, this.matchType, this.data));
-	}
-	public void updateAll()
-	{
-		if (this.server()) return;
-		NBTReader.network().sendToServer(new PacketReaderInfo(this.getPos(), this.in, this.out, this.matchType, this.data));
-		this.markDirty();
-	}
-	public void updateDirs()
-	{
-		if (this.server()) return;
-		NBTReader.network().sendToServer(new PacketReaderInfo(this.getPos(), this.in, this.out));
-		this.markDirty();
-	}
-	public void updateMatchType()
-	{
-		if (this.server()) return;
-		NBTReader.network().sendToServer(new PacketReaderInfo(this.getPos(), this.matchType));
-		this.markDirty();
-	}
-	
-	private boolean server()
-	{
-		Coords pos = this.getPos();
-		return pos != null && !pos.world.isRemote;
-	}
-	private boolean client()
-	{
-		Coords pos = this.getPos();
-		return pos != null && pos.world.isRemote;
 	}
 	
 	@Override
@@ -342,38 +320,28 @@ public class TileEntityNBTSorter extends TileEntity
 				this.data.add(arr);
 			}
 		}
-		
-		this.updateAll();
-		this.updateClients();
 	}
 	
-	public void onPacket(PacketReaderInfo p, Side side)
+	@Override
+	public Packet getDescriptionPacket()
 	{
-		if (p.type() == -1)
-		{
-			LogHelper.error("Invalid type");
-			return;
-		}
-		
-		
-		if (p.type() == 0 || p.type() == 1)
-		{
-			this.in = p.in();
-			this.out = p.out();
-		}
-		if (p.type() == 0 || p.type() == 2)
-		{
-			this.matchType = p.matchType();
-		}
-		if (p.type() == 0 || p.type() == 3)
-		{
-			this.data = p.data();
-		}
-		
-		if (side.isServer()) NBTReader.network().sendToAll(p);
-		
-		this.getPos().markForUpdate(false);
-		this.getPos().markForRenderUpdate();
-		this.getPos().notifyChange();
+		NBTTagCompound tag = new NBTTagCompound();
+		this.writeToNBT(tag);
+		return new S35PacketUpdateTileEntity(this.xCoord, this.yCoord, this.zCoord, -1, tag);
+	}
+	
+	@Override
+	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
+	{
+		super.onDataPacket(net, pkt);
+		this.readFromNBT(pkt.func_148857_g());
+		LogHelper.info("Got packet on side " + FMLCommonHandler.instance().getSide());
+		this.markDirty();
+	}
+	
+	public void onClientPacket(PacketReaderInfo pkt)
+	{
+		this.readFromNBT(pkt.tag());
+		this.markDirty();
 	}
 }

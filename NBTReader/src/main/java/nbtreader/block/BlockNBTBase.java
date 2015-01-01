@@ -29,7 +29,7 @@ import nbtreader.tileentity.TileEntityNBTSorter;
  */
 public class BlockNBTBase extends BlockContainer
 {
-	IIcon[][] icons = new IIcon[2][];
+	private final IIcon[][] icons = new IIcon[2][];
 	
 	public BlockNBTBase()
 	{
@@ -143,6 +143,12 @@ public class BlockNBTBase extends BlockContainer
 		}
 		
 		return this.icons[0][0];
+	}
+	
+	@Override
+	public int damageDropped(int meta)
+	{
+		return meta;
 	}
 	
 	@Override
