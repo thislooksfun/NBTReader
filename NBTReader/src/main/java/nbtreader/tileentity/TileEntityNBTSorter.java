@@ -43,20 +43,6 @@ public class TileEntityNBTSorter extends TileEntity
 		
 		this.in = ForgeDirection.SOUTH;
 		this.out = ForgeDirection.NORTH;
-		
-//		ArrayList<String> arr = new ArrayList<String>();
-//		arr.add("pages");
-//		arr.add("0");
-//		arr.add("abcd");
-//		this.data.add(arr);
-		
-		ArrayList<String> arr = new ArrayList<String>();
-		arr.add("asd");
-		arr.add("list");
-		arr.add("0");
-		arr.add("var");
-		arr.add("32.5");
-		this.data.add(arr);
 	}
 	
 	public Coords getPos()

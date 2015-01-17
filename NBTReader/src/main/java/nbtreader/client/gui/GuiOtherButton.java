@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 
+import nbtreader.util.Colors;
+
 /**
  * @author thislooksfun
  */
@@ -19,7 +21,7 @@ public class GuiOtherButton extends Gui
 	protected int height;
 	
 	protected int color;
-	protected int textColor;
+	protected int textColor = Colors.TEXT_COLOR;
 	
 	protected String str;
 	

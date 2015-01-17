@@ -23,35 +23,51 @@ public class GuiSelectGroupFull extends Gui
 	private int width;
 	private int height;
 	
-	private int start;
+	private int start = 0;
 	
 	private GuiOtherButton done;
 	private GuiOtherButton add;
 	
 	private ArrayList<GuiTextField> fields = new ArrayList<GuiTextField>();
+	private ArrayList<GuiOtherButton> rmvButtons = new ArrayList<GuiOtherButton>();
 	
 	public GuiSelectGroupFull(int top, int left, int width, int height, ArrayList<String> data)
 	{
 		this.width = width;
 		this.height = height;
 		
-		this.done = new GuiOtherButton(10, 11, "Done").setColor(Colors.rgba(0, 200, 0, 255)).setTextColor(Colors.TEXT_COLOR);
-		this.add = new GuiOtherButton(30, 11, "+").setColor(Colors.rgba(0, 200, 0, 255)).setTextColor(Colors.TEXT_COLOR);
+		this.done = new GuiOtherButton(30, 11, "Done").setColor(Colors.rgba(0, 200, 0, 255));
+		this.add = new GuiOtherButton(30, 11, "+").setColor(Colors.rgba(0, 200, 0, 255));
 		this.updatePos(top, left);
 		
 		for (String s : data)
 		{
-			GuiTextField f = new GuiTextField(this.fr, this.left + 8, 0, this.width - 20, 12);
+			GuiTextField f = new GuiTextField(this.fr, this.left + 16, 0, this.width - 28, 12);
 			f.setText(s);
 			this.fields.add(f);
+			this.genButton();
 		}
+	}
+	
+	private void genButton()
+	{
+		GuiOtherButton b = new GuiOtherButton(8, 8, "-").setColor(Colors.rgba(200, 0, 0, 255));
+		b.left = this.left + 6;
+		this.rmvButtons.add(b);
+	}
+	
+	private void remove(int i)
+	{
+		this.rmvButtons.remove(i);
+		this.fields.remove(i);
+		this.checkStart();
 	}
 	
 	public void updatePos(int top, int left)
 	{
 		this.top = top;
 		this.left = left;
-		this.done.setPos(left + this.width - 7, top - 4);
+		this.done.setPos(left + this.width - 36, top+6);
 		this.add.setPos(left + (this.width - this.add.width) / 2, 0);
 	}
 	
@@ -76,14 +92,18 @@ public class GuiSelectGroupFull extends Gui
 		for (int i = 0; i < max; i++)
 		{
 			GuiTextField f = this.fields.get(this.start + i);
+			GuiOtherButton b = this.rmvButtons.get(this.start + i);
+			
 			f.setVisible(true);
-			f.yPosition = this.top + 18 + (i * 16);
+			f.yPosition = this.top + 19 + (i * 16);
+			b.top = f.yPosition + 2;
 			f.drawTextBox();
+			b.render();
 		}
 		
 		if (this.start + PERPAGE > this.fields.size())
 		{
-			this.add.top = this.top + 18 + (max * 16);
+			this.add.top = this.top + 19 + (max * 16);
 			this.add.visible = true;
 		} else
 			this.add.visible = false;
@@ -141,9 +161,24 @@ public class GuiSelectGroupFull extends Gui
 	public void onClick(int x, int y, int button)
 	{
 		if (this.add.wasClicked(x, y, button))
-			this.fields.add(new GuiTextField(this.fr, this.left + 8, 0, this.width - 20, 12));
+		{
+			this.fields.add(new GuiTextField(this.fr, this.left + 16, 0, this.width - 28, 12));
+			this.genButton();
+		}
 		else
 		{
+			int max = (this.rmvButtons.size() - this.start > PERPAGE ? PERPAGE : this.rmvButtons.size() - this.start);
+			int rmv = -1;
+			for (int i = 0; i < max; i++)
+			{
+				GuiOtherButton b = this.rmvButtons.get(this.start + i);
+				if (b.wasClicked(x, y, button))
+					rmv = this.start + i;
+			}
+			
+			if (rmv > -1)
+				this.remove(rmv);
+			
 			for (GuiTextField f : this.fields)
 				f.mouseClicked(x, y, button);
 		}
