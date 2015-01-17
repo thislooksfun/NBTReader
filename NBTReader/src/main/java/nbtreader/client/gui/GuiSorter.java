@@ -22,9 +22,10 @@ import org.lwjgl.opengl.GL11;
  */
 public class GuiSorter extends GuiScreen
 {
+	private static final int elementsPerPage = 10;
+	
 	private static final ResourceLocation img = new ResourceLocation(NBTReader.MODID, "textures/gui/sorter.png");
 	
-	private ArrayList<String> displayStrings = new ArrayList<String>();
 	private int start = 0;
 	
 	private TileEntityNBTSorter te;
@@ -38,13 +39,18 @@ public class GuiSorter extends GuiScreen
 	GuiCustomButton buttonMatchType;
 	GuiCustomButton buttonInDir;
 	GuiCustomButton buttonOutDir;
+	GuiCustomButton addGroup;
+	
+	private ArrayList<GuiSelectGroup> groups = new ArrayList<GuiSelectGroup>();
+	
+	private GuiSelectGroup currentGroup = null;
 	
 	public GuiSorter(TileEntityNBTSorter te)
 	{
 		this.te = te;
 		
 		this.xSize = 224;
-		this.ySize = 151;
+		this.ySize = 200;
 	}
 	
 	@Override
@@ -53,17 +59,24 @@ public class GuiSorter extends GuiScreen
 	{
 		super.initGui();
 		
-		this.buttonList.add(this.buttonMatchType = new GuiCustomButton(0, this.left, this.top, 60, 15, this.te.matchType ? "Match: All" : "Match: Any"));
-		this.buttonList.add(this.buttonInDir = new GuiCustomButton(1, this.left, this.top + 30, 60, 15, "In: " + this.te.in.name().substring(0, 1) + this.te.in.name().substring(1).toLowerCase()));
-		this.buttonList.add(this.buttonOutDir = new GuiCustomButton(2, this.left, this.top + 60, 60, 15, "Out: " + this.te.out.name().substring(0, 1) + this.te.out.name().substring(1).toLowerCase()));
+		this.buttonList.add(this.buttonMatchType = new GuiCustomButton(0, 60, 15, this.te.matchType ? "Match: All" : "Match: Any"));
+		this.buttonList.add(this.buttonInDir = new GuiCustomButton(1, 60, 15, "In: " + this.te.in.name().substring(0, 1) + this.te.in.name().substring(1).toLowerCase()));
+		this.buttonList.add(this.buttonOutDir = new GuiCustomButton(2, 60, 15, "Out: " + this.te.out.name().substring(0, 1) + this.te.out.name().substring(1).toLowerCase()));
+		this.buttonList.add(this.addGroup = new GuiCustomButton(3, 60, 11, "+"));
 	}
 	
 	@Override
 	public void drawScreen(int i1, int i2, float f1)
 	{
 		this.drawBackground();
-		this.drawForeground();
-		super.drawScreen(i1, i2, f1);
+		
+		if (this.currentGroup != null)
+			this.currentGroup.renderFull(this.top, this.left, this.ySize, this.xSize);
+		else
+		{
+			this.drawForeground();
+			super.drawScreen(i1, i2, f1);
+		}
 	}
 	
 	@Override
@@ -73,14 +86,16 @@ public class GuiSorter extends GuiScreen
 		this.left = (this.width - this.xSize) / 2;
 		this.top = (this.height - this.ySize) / 2;
 		
-		this.buttonMatchType.xPosition = this.left + 15;
-		this.buttonMatchType.yPosition = this.top + 10;
+		this.buttonMatchType.xPosition = this.left + 17;
+		this.buttonMatchType.yPosition = this.top + 7;
 		
-		this.buttonInDir.xPosition = this.left + 80;
-		this.buttonInDir.yPosition = this.top + 10;
+		this.buttonInDir.xPosition = this.left + 82;
+		this.buttonInDir.yPosition = this.top + 7;
 		
-		this.buttonOutDir.xPosition = this.left + 145;
-		this.buttonOutDir.yPosition = this.top + 10;
+		this.buttonOutDir.xPosition = this.left + 147;
+		this.buttonOutDir.yPosition = this.top + 7;
+		
+		this.addGroup.xPosition = this.left + (this.xSize - this.addGroup.width) / 2;
 	}
 	
 	protected void drawBackground()
@@ -92,9 +107,25 @@ public class GuiSorter extends GuiScreen
 	
 	protected void drawForeground()
 	{
-		this.rect(5, 5, 214, 141, Colors.rgba(0, 11, 121, 255));
+		this.rect(5, 5, this.xSize - 10, this.ySize - 10, Colors.rgba(0, 11, 121, 255));
+		this.rect(5, 5, this.xSize - 10, 19, Colors.rgba(50, 81, 121, 255));
 		
-		this.drawScrollBar();
+		int max = (this.groups.size() - this.start > elementsPerPage ? elementsPerPage : this.groups.size() - this.start);
+		for (int i = 0; i < max; i++)
+		{
+			GuiSelectGroup g = this.groups.get(start + i);
+			g.renderSub((this.top + 26 + (i * 17)), this.left + 7, this.xSize - 7 - ((this.groups.size() + 1 > elementsPerPage) ? 11 : 7));
+		}
+		
+		if (this.start + elementsPerPage > this.groups.size())
+		{
+			this.addGroup.yPosition = this.top + 27 + (max * 17);
+			this.addGroup.visible = true;
+		} else
+			this.addGroup.visible = false;
+		
+		if (this.groups.size() + 1 > elementsPerPage)
+			this.drawScrollBar();
 	}
 	
 	private void rect(int left, int top, int width, int height, int color)
@@ -104,13 +135,13 @@ public class GuiSorter extends GuiScreen
 	
 	private void drawScrollBar()
 	{
-		this.rect(this.xSize - 9, 5, 4, 141, Colors.rgba(0, 150, 0, 255));
+		this.rect(this.xSize - 9, 24, 4, this.ySize - 29, Colors.rgba(0, 150, 0, 255));
 		
 		int height = 15;
-		float percent = ((float)this.start / (this.displayStrings.size() - 14));
-		int offset = (int)(percent * (127 - height));
+		float percent = ((float)this.start / (this.groups.size() + 1 - elementsPerPage));
+		int offset = (int)(percent * (this.ySize - 31 - height));
 		
-		this.rect(this.xSize - 8, 6 + offset, 2, 6 + offset + height, Colors.rgba(0, 255, 124, 255));
+		this.rect(this.xSize - 8, 25 + offset, 2, height, Colors.rgba(0, 255, 124, 255));
 	}
 	
 	private void drawString(String s, int left, int top)
@@ -122,35 +153,68 @@ public class GuiSorter extends GuiScreen
 		this.drawString(this.fontRendererObj, ColorHelper.limitToLengthExcludingCodes(s, maxWidth), left, top, Colors.WHITE);
 	}
 	
+	private void addNewGroup()
+	{
+		GuiSelectGroup g = new GuiSelectGroup(14);
+		this.groups.add(g);
+	}
+	private void removeGroup(int id)
+	{
+		this.groups.remove(id);
+		this.checkStart();
+	}
+	
 	@Override
 	public void handleMouseInput()
 	{
 		super.handleMouseInput();
 		int i = Mouse.getEventDWheel();
 		
-		if (i != 0 && this.displayStrings.size() > 14)
+		if (i != 0 && (this.groups.size() + 1) > elementsPerPage)
 		{
 			if (i > 0)
-			{
-				start -= 1;
-			}
-			if (i < 0)
-			{
-				start += 1;
-			}
+				this.start--;
+			else if (i < 0)
+				this.start++;
 			
-			if (this.start < 0)
-			{
-				this.start = 0;
-			}
-			
-			if (this.start > this.displayStrings.size() - 14)
-			{
-				this.start = this.displayStrings.size() - 14;
-			}
+			this.checkStart();
 		}
 	}
 	
+	private void checkStart()
+	{
+		if (this.start > (this.groups.size() + 1) - elementsPerPage)
+			this.start = (this.groups.size() + 1) - elementsPerPage;
+		
+		if (this.start < 0)
+			this.start = 0;
+	}
+	
+	@Override
+	protected void mouseClicked(int x, int y, int button)
+	{
+		if (this.currentGroup != null && this.currentGroup.closeClick(x, y, button))
+		{
+			this.currentGroup = null;
+			return;
+		}
+		
+		super.mouseClicked(x, y, button);
+		
+		int toRemove = -1;
+		
+		int max = (this.groups.size() - this.start > elementsPerPage ? elementsPerPage : this.groups.size() - this.start);
+		for (int i = 0; i < max; i++)
+		{
+			GuiSelectGroup g = this.groups.get(start + i);
+			if (g.removeClick(x, y, button))
+				toRemove = i;
+			else if (g.clicked(x, y, button))
+				this.currentGroup = g;
+		}
+		
+		if (toRemove > -1) this.removeGroup(toRemove);
+	}
 	@Override
 	protected void actionPerformed(GuiButton button)
 	{
@@ -188,16 +252,32 @@ public class GuiSorter extends GuiScreen
 				this.buttonOutDir.displayString = "Out: " + this.te.out.name().substring(0, 1) + this.te.out.name().substring(1).toLowerCase();
 				
 				break;
+			case 3:
+				//Add group button
+				this.addNewGroup();
+				if (this.groups.size() >= elementsPerPage)
+					this.start++;
+				break;
 		}
 	}
 	
 	@Override
 	public void onGuiClosed()
 	{
+		//Re-render
 		this.te.getPos().markForUpdate(false);
+		
+		//Update the client tile entity's matching rules
+		this.te.data = new ArrayList<ArrayList<String>>();
+//		for (GuiSelectGroup g : this.groups)
+//			this.te.data.add(g.toList()); //TODO fix
+		
+		//Write the client tile entity to a NBT tag, and send it to the server
 		NBTTagCompound tag = new NBTTagCompound();
 		this.te.writeToNBT(tag);
 		NBTReader.network().sendToServer(new PacketReaderInfo(this.te.getPos(), tag));
+		
+		//Close the GUI
 		super.onGuiClosed();
 	}
 }

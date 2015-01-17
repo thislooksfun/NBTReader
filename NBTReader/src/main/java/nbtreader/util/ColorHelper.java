@@ -27,16 +27,14 @@ public class ColorHelper
 	
 	public static String limitToLengthExcludingCodes(String s, int length)
 	{
-		length = length < 0 ? 0 : length;
+		if (length <= 0 || s == null) return "";
 		
 		s = format(s);
 		int end = s.length();
-		while (Minecraft.getMinecraft().fontRenderer.getStringWidth(s.substring(0, end)) > length)
-		{
+		while (Minecraft.getMinecraft().fontRenderer.getStringWidth((s.substring(0, end)) + "\u00a7r...") > length)
 			end--;
-		}
 		
-		return end < s.length() ? getRenderedSubstring(s, end)+"\u00a7r..." : s;
+		return end < s.length() ? getRenderedSubstring(s, end) + "\u00a7r..." : s;
 	}
 	
 	private static String getRenderedSubstring(String s, int end)

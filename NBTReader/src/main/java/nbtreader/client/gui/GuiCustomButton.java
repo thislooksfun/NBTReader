@@ -15,9 +15,9 @@ public class GuiCustomButton extends GuiButton
 	private int colorHover = Colors.rgba(90, 200, 40, 255);
 	private int textColorHover = Colors.rgb(255, 255, 255);
 	
-	public GuiCustomButton(int id, int x, int y, String str)
+	public GuiCustomButton(int id, int width, int height, String str)
 	{
-		this(id, x, y, 200, 20, str);
+		this(id, 0, 0, width, height, str);
 	}
 	public GuiCustomButton(int id, int x, int y, int width, int height, String str)
 	{

@@ -30,7 +30,9 @@ public class TileEntityNBTSorter extends TileEntity
 	public ForgeDirection in;
 	public ForgeDirection out;
 	
-	private ArrayList<ArrayList<String>> data = new ArrayList<ArrayList<String>>();
+	public ArrayList<ArrayList<String>> data = new ArrayList<ArrayList<String>>();
+	
+	private int stackPullSize = 64;
 	
 	/** True if matching all conditions, false if matching any */
 	public boolean matchType = true;
@@ -127,11 +129,12 @@ public class TileEntityNBTSorter extends TileEntity
 		if (teOut == null || !(teOut instanceof IInventory)) return; //No TE or isn't an inventory!
 		IInventory invOut = ((IInventory)teOut);
 		
-		pulled.stackSize = 1;
+		int size = pulled.stackSize > this.stackPullSize ? this.stackPullSize : pulled.stackSize;
+		pulled.stackSize = size;
 		
 		if (mergeStacks(invOut, pulled))
 		{
-			invIn.decrStackSize(pullSlot, 1);
+			invIn.decrStackSize(pullSlot, size);
 		}
 	}
 	
@@ -148,7 +151,6 @@ public class TileEntityNBTSorter extends TileEntity
 				if (s != null && s.getItem() == stack.getItem() && s.stackSize + stack.stackSize <= s.getMaxStackSize())
 				{
 					s.stackSize += stack.stackSize;
-//					inv.setInventorySlotContents(slot, s);
 					return true;
 				}
 			}
@@ -170,7 +172,6 @@ public class TileEntityNBTSorter extends TileEntity
 				if (s != null && s.getItem() == stack.getItem() && s.stackSize + stack.stackSize <= s.getMaxStackSize())
 				{
 					s.stackSize += stack.stackSize;
-//					inv.setInventorySlotContents(i, s);
 					return true;
 				}
 			}
