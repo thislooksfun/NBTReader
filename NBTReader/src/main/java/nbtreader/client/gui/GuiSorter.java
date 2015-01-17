@@ -13,6 +13,7 @@ import nbtreader.network.PacketReaderInfo;
 import nbtreader.tileentity.TileEntityNBTSorter;
 import nbtreader.util.ColorHelper;
 import nbtreader.util.Colors;
+import nbtreader.util.LogHelper;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -71,7 +72,7 @@ public class GuiSorter extends GuiScreen
 		this.drawBackground();
 		
 		if (this.currentGroup != null)
-			this.currentGroup.renderFull(this.top, this.left, this.ySize, this.xSize);
+			this.currentGroup.renderFull();
 		else
 		{
 			this.drawForeground();
@@ -96,6 +97,15 @@ public class GuiSorter extends GuiScreen
 		this.buttonOutDir.yPosition = this.top + 7;
 		
 		this.addGroup.xPosition = this.left + (this.xSize - this.addGroup.width) / 2;
+		
+		this.loadData(this.te.data);
+	}
+	
+	private void loadData(ArrayList<ArrayList<String>> data)
+	{
+		LogHelper.info("Loading "+data.size()+" items");
+		for (ArrayList<String> arr : data)
+			this.groups.add(new GuiSelectGroup(this.top, this.left, this.xSize, this.ySize, 14, arr));
 	}
 	
 	protected void drawBackground()
@@ -155,8 +165,7 @@ public class GuiSorter extends GuiScreen
 	
 	private void addNewGroup()
 	{
-		GuiSelectGroup g = new GuiSelectGroup(14);
-		this.groups.add(g);
+		this.groups.add(new GuiSelectGroup(this.top, this.left, this.xSize, this.ySize, 14));
 	}
 	private void removeGroup(int id)
 	{
@@ -168,6 +177,13 @@ public class GuiSorter extends GuiScreen
 	public void handleMouseInput()
 	{
 		super.handleMouseInput();
+		
+		if (this.currentGroup != null)
+		{
+			this.currentGroup.mouseInput();
+			return;
+		}
+		
 		int i = Mouse.getEventDWheel();
 		
 		if (i != 0 && (this.groups.size() + 1) > elementsPerPage)
@@ -193,9 +209,15 @@ public class GuiSorter extends GuiScreen
 	@Override
 	protected void mouseClicked(int x, int y, int button)
 	{
-		if (this.currentGroup != null && this.currentGroup.closeClick(x, y, button))
+		if (this.currentGroup != null)
 		{
-			this.currentGroup = null;
+			if (this.currentGroup.closeClick(x, y, button))
+			{
+				this.currentGroup.onClose();
+				this.currentGroup = null;
+			} else
+				this.currentGroup.onClick(x, y, button);
+			
 			return;
 		}
 		
@@ -215,6 +237,22 @@ public class GuiSorter extends GuiScreen
 		
 		if (toRemove > -1) this.removeGroup(toRemove);
 	}
+	
+	@Override
+	protected void keyTyped(char ch, int key)
+	{
+		if (this.currentGroup != null)
+		{
+			if (key == 1)
+			{
+				this.currentGroup.onClose();
+				this.currentGroup = null;
+			} else
+				this.currentGroup.keyPress(ch, key);
+		} else
+			super.keyTyped(ch, key);
+	}
+	
 	@Override
 	protected void actionPerformed(GuiButton button)
 	{
@@ -268,9 +306,9 @@ public class GuiSorter extends GuiScreen
 		this.te.getPos().markForUpdate(false);
 		
 		//Update the client tile entity's matching rules
-		this.te.data = new ArrayList<ArrayList<String>>();
-//		for (GuiSelectGroup g : this.groups)
-//			this.te.data.add(g.toList()); //TODO fix
+		this.te.data.clear();
+		for (GuiSelectGroup g : this.groups)
+			this.te.data.add(g.toArray());
 		
 		//Write the client tile entity to a NBT tag, and send it to the server
 		NBTTagCompound tag = new NBTTagCompound();

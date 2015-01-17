@@ -23,6 +23,8 @@ public class GuiOtherButton extends Gui
 	
 	protected String str;
 	
+	public boolean visible = true;
+	
 	private FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
 	
 	public GuiOtherButton(int width, int height, String s)
@@ -69,6 +71,7 @@ public class GuiOtherButton extends Gui
 	
 	public void render()
 	{
+		if (!this.visible) return;
 		drawRect(this.left, this.top, this.left + this.width, this.top + this.height, this.color);
 		this.drawCenteredString(this.fontRenderer, this.str, this.left + (this.width / 2), this.top + (this.height / 2) - (this.fontRenderer.FONT_HEIGHT / 2), this.textColor);
 	}
