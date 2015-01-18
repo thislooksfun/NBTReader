@@ -10,6 +10,10 @@ public class Colors
 	public static final int TEXT_COLOR = rgb(244, 244, 244);
 	public static final int DISABLED_TEXT_COLOR = rgb(112, 112, 112);
 	
+	public static int rgba(int r, int g, int b)
+	{
+		return rgba(r, g, b, 255);
+	}
 	public static int rgba(int r, int g, int b, int a)
 	{
 		a = (a > 255 ? 255 : a);

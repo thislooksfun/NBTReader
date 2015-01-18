@@ -117,8 +117,8 @@ public class GuiSorter extends GuiScreen
 	
 	protected void drawForeground()
 	{
-		this.rect(5, 5, this.xSize - 10, this.ySize - 10, Colors.rgba(0, 11, 121, 255));
-		this.rect(5, 5, this.xSize - 10, 19, Colors.rgba(50, 81, 121, 255));
+		this.rect(5, 5, this.xSize - 10, this.ySize - 10, Colors.rgba(0, 11, 121));
+		this.rect(5, 5, this.xSize - 10, 19, Colors.rgba(50, 81, 121));
 		
 		int max = (this.groups.size() - this.start > elementsPerPage ? elementsPerPage : this.groups.size() - this.start);
 		for (int i = 0; i < max; i++)
@@ -145,13 +145,13 @@ public class GuiSorter extends GuiScreen
 	
 	private void drawScrollBar()
 	{
-		this.rect(this.xSize - 9, 24, 4, this.ySize - 29, Colors.rgba(0, 150, 0, 255));
+		this.rect(this.xSize - 9, 24, 4, this.ySize - 29, Colors.rgba(0, 150, 0));
 		
 		int height = 15;
 		float percent = ((float)this.start / (this.groups.size() + 1 - elementsPerPage));
 		int offset = (int)(percent * (this.ySize - 31 - height));
 		
-		this.rect(this.xSize - 8, 25 + offset, 2, height, Colors.rgba(0, 255, 124, 255));
+		this.rect(this.xSize - 8, 25 + offset, 2, height, Colors.rgba(0, 255, 124));
 	}
 	
 	private void drawString(String s, int left, int top)

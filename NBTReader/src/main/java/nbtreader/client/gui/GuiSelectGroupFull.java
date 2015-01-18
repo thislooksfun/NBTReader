@@ -36,8 +36,8 @@ public class GuiSelectGroupFull extends Gui
 		this.width = width;
 		this.height = height;
 		
-		this.done = new GuiOtherButton(30, 11, "Done").setColor(Colors.rgba(0, 200, 0, 255));
-		this.add = new GuiOtherButton(30, 11, "+").setColor(Colors.rgba(0, 200, 0, 255));
+		this.done = new GuiOtherButton(30, 11, "Done").setColor(Colors.rgba(0, 200, 0));
+		this.add = new GuiOtherButton(30, 11, "+").setColor(Colors.rgba(0, 200, 0));
 		this.updatePos(top, left);
 		
 		for (String s : data)
@@ -51,7 +51,7 @@ public class GuiSelectGroupFull extends Gui
 	
 	private void genButton()
 	{
-		GuiOtherButton b = new GuiOtherButton(8, 8, "-").setColor(Colors.rgba(200, 0, 0, 255));
+		GuiOtherButton b = new GuiOtherButton(8, 8, "-").setColor(Colors.rgba(200, 0, 0));
 		b.left = this.left + 6;
 		this.rmvButtons.add(b);
 	}
@@ -79,7 +79,7 @@ public class GuiSelectGroupFull extends Gui
 	
 	private void renderBackground()
 	{
-		this.rect(5, 5, this.width - 10, this.height - 10, Colors.rgba(150, 100, 100, 255));
+		this.rect(5, 5, this.width - 10, this.height - 10, Colors.rgba(150, 100, 100));
 		this.done.render();
 		this.add.render();
 	}
@@ -114,13 +114,13 @@ public class GuiSelectGroupFull extends Gui
 	
 	private void drawScrollBar()
 	{
-		this.rect(this.width - 9, 24, 4, this.height - 29, Colors.rgba(0, 150, 0, 255));
+		this.rect(this.width - 9, 24, 4, this.height - 29, Colors.rgba(0, 150, 0));
 		
 		int height = 15;
 		float percent = ((float)this.start / (this.fields.size() + 1 - PERPAGE));
 		int offset = (int)(percent * (this.height - 31 - height));
 		
-		this.rect(this.width - 8, 25 + offset, 2, height, Colors.rgba(0, 255, 124, 255));
+		this.rect(this.width - 8, 25 + offset, 2, height, Colors.rgba(0, 255, 124));
 	}
 	
 	private void rect(int left, int top, int width, int height, int color)

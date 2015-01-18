@@ -76,51 +76,49 @@ public class TileEntityNBTSorter extends TileEntity
 		if (teIn == null || !(teIn instanceof IInventory)) return; //No TE or isn't an inventory!
 		IInventory invIn = ((IInventory)teIn);
 		
-		ItemStack pulled = null;
-		int pullSlot = -1;
-		
-		if (invIn instanceof ISidedInventory)
-		{
-			for (int slot : ((ISidedInventory)invIn).getAccessibleSlotsFromSide(this.in.getOpposite().ordinal()))
-			{
-				ItemStack s = invIn.getStackInSlot(slot);
-				if (s != null && this.stackMatches(s))
-				{
-					pulled = s.copy();
-					pullSlot = slot;
-					break;
-				}
-			}
-		} else
-		{
-			for (int slot = 0; slot < invIn.getSizeInventory(); slot++)
-			{
-				ItemStack s = invIn.getStackInSlot(slot);
-				if (s != null && this.stackMatches(s))
-				{
-					pulled = s.copy();
-					pullSlot = slot;
-					break;
-				}
-			}
-		}
-		
-		if (pulled == null)
-		{
-			return;
-		}
-		
-		
 		TileEntity teOut = c.getCoordsInDir(this.out).getTileEntity();
 		if (teOut == null || !(teOut instanceof IInventory)) return; //No TE or isn't an inventory!
 		IInventory invOut = ((IInventory)teOut);
 		
-		int size = pulled.stackSize > this.stackPullSize ? this.stackPullSize : pulled.stackSize;
-		pulled.stackSize = size;
+		int cntPulled = 0;
 		
-		if (mergeStacks(invOut, pulled))
+		while (cntPulled < this.stackPullSize)
 		{
-			invIn.decrStackSize(pullSlot, size);
+			if (invIn instanceof ISidedInventory)
+			{
+				for (int slot : ((ISidedInventory)invIn).getAccessibleSlotsFromSide(this.in.getOpposite().ordinal()))
+				{
+					ItemStack s = invIn.decrStackSize(slot, 1);
+					if (s != null && this.stackMatches(s))
+					{
+						if (mergeStacks(invOut, s))
+							cntPulled++;
+						else
+						{
+							invIn.getStackInSlot(slot).stackSize++;
+							cntPulled = this.stackPullSize;
+						}
+						break;
+					}
+				}
+			} else
+			{
+				for (int slot = 0; slot < invIn.getSizeInventory(); slot++)
+				{
+					ItemStack s = invIn.decrStackSize(slot, 1);
+					if (s != null && this.stackMatches(s))
+					{
+						if (mergeStacks(invOut, s))
+							cntPulled++;
+						else
+						{
+							invIn.getStackInSlot(slot).stackSize++;
+							cntPulled = this.stackPullSize;
+						}
+						break;
+					}
+				}
+			}
 		}
 	}
 	
@@ -180,76 +178,87 @@ public class TileEntityNBTSorter extends TileEntity
 	{
 		if (!stack.hasTagCompound()) return false; //No tag == nothing to compare
 		
-		for (int i = 0; i < this.data.size(); i++)
+		boolean match = false;
+		
+		for (ArrayList<String> arr : this.data)
 		{
-			NBTBase currentTag = stack.getTagCompound().copy();
-			ArrayList<String> arr = this.data.get(i);
-			for (int j = 0; j < arr.size(); j++)
+			match = this.matches(arr, stack.getTagCompound().copy());
+			if (!match && this.matchType)
+				return false;
+			else if (match && !this.matchType)
+				return true;
+		}
+		
+		return match;
+	}
+	
+	private boolean matches(ArrayList<String> arr, NBTBase currentTag)
+	{
+		for (int j = 0; j < arr.size(); j++)
+		{
+			if (currentTag instanceof NBTBase.NBTPrimitive || currentTag instanceof NBTTagString)
 			{
-				if (currentTag instanceof NBTBase.NBTPrimitive || currentTag instanceof NBTTagString)
+				if (j + 1 < arr.size()) return false; //Expected one more tag, found at least two
+				
+				if (currentTag instanceof NBTTagString)
+					return ((NBTTagString)currentTag).func_150285_a_().equals(arr.get(j));
+				
+				try
 				{
-					if (j + 1 < arr.size()) return false; //Expected one more tag, found at least two
-					
-					if (currentTag instanceof NBTTagString)
-						return ((NBTTagString)currentTag).func_150285_a_().equals(arr.get(j));
-					
-					try
+					switch (currentTag.getId())
 					{
-						switch (currentTag.getId())
-						{
-							case Constants.NBT.TAG_BYTE:
-								return ((NBTTagByte)currentTag).func_150290_f() == Byte.parseByte(arr.get(j));
-							case Constants.NBT.TAG_SHORT:
-								return ((NBTTagShort)currentTag).func_150289_e() == Short.parseShort(arr.get(j));
-							case Constants.NBT.TAG_LONG:
-								return ((NBTTagLong)currentTag).func_150291_c() == Long.parseLong(arr.get(j));
-							case Constants.NBT.TAG_FLOAT:
-								return ((NBTTagFloat)currentTag).func_150288_h() == Float.parseFloat(arr.get(j));
-							case Constants.NBT.TAG_DOUBLE:
-								return ((NBTTagDouble)currentTag).func_150286_g() == Double.parseDouble(arr.get(j));
-						}
-					} catch (IllegalArgumentException e)
-					{
-						return false; //Wrong format (Probably not a number)
+						case Constants.NBT.TAG_BYTE:
+							return ((NBTTagByte)currentTag).func_150290_f() == Byte.parseByte(arr.get(j));
+						case Constants.NBT.TAG_SHORT:
+							return ((NBTTagShort)currentTag).func_150289_e() == Short.parseShort(arr.get(j));
+						case Constants.NBT.TAG_LONG:
+							return ((NBTTagLong)currentTag).func_150291_c() == Long.parseLong(arr.get(j));
+						case Constants.NBT.TAG_FLOAT:
+							return ((NBTTagFloat)currentTag).func_150288_h() == Float.parseFloat(arr.get(j));
+						case Constants.NBT.TAG_DOUBLE:
+							return ((NBTTagDouble)currentTag).func_150286_g() == Double.parseDouble(arr.get(j));
 					}
-				} else if (currentTag instanceof NBTTagByteArray)
+				} catch (IllegalArgumentException e)
 				{
-					if (j + 1 < arr.size()) return false;
-					try
-					{
-						return ((NBTTagByteArray)currentTag).func_150292_c()[Integer.parseInt(arr.get(j))] == Byte.parseByte(arr.get(j + 1));
-					} catch (IllegalArgumentException e)
-					{
-						return false;
-					}
-				} else if (currentTag instanceof NBTTagIntArray)
+					return false; //Wrong format (Probably not a number)
+				}
+			} else if (currentTag instanceof NBTTagByteArray)
+			{
+				if (j + 1 < arr.size()) return false;
+				try
 				{
-					if (j + 1 < arr.size()) return false;
-					try
-					{
-						return ((NBTTagIntArray)currentTag).func_150302_c()[Integer.parseInt(arr.get(j))] == Integer.parseInt(arr.get(j + 1));
-					} catch (IllegalArgumentException e)
-					{
-						return false;
-					}
-				} else if (currentTag instanceof NBTTagList)
-				{
-					if (j + 1 >= arr.size()) return false;
-					
-					try
-					{
-						currentTag = ((NBTTagList)currentTag).removeTag(Integer.parseInt(arr.get(j)));
-					} catch (IllegalArgumentException e)
-					{
-						return false;
-					}
-				} else if (currentTag instanceof NBTTagCompound)
-				{
-					currentTag = ((NBTTagCompound)currentTag).getTag(arr.get(j));
-				} else
+					return ((NBTTagByteArray)currentTag).func_150292_c()[Integer.parseInt(arr.get(j))] == Byte.parseByte(arr.get(j + 1));
+				} catch (IllegalArgumentException e)
 				{
 					return false;
 				}
+			} else if (currentTag instanceof NBTTagIntArray)
+			{
+				if (j + 1 < arr.size()) return false;
+				try
+				{
+					return ((NBTTagIntArray)currentTag).func_150302_c()[Integer.parseInt(arr.get(j))] == Integer.parseInt(arr.get(j + 1));
+				} catch (IllegalArgumentException e)
+				{
+					return false;
+				}
+			} else if (currentTag instanceof NBTTagList)
+			{
+				if (j + 1 >= arr.size()) return false;
+				
+				try
+				{
+					currentTag = ((NBTTagList)currentTag).removeTag(Integer.parseInt(arr.get(j)));
+				} catch (IllegalArgumentException e)
+				{
+					return false;
+				}
+			} else if (currentTag instanceof NBTTagCompound)
+			{
+				currentTag = ((NBTTagCompound)currentTag).getTag(arr.get(j));
+			} else
+			{
+				return false;
 			}
 		}
 		
@@ -292,7 +301,7 @@ public class TileEntityNBTSorter extends TileEntity
 		NBTTagList matches = tag.getTagList("matches", 9);
 		
 		this.data.clear();
-		for (int i = 0; i < matches.tagCount(); i++)
+		while (matches.tagCount() > 0)
 		{
 			NBTTagList l = (NBTTagList)matches.removeTag(0);
 			ArrayList<String> arr = new ArrayList<String>();

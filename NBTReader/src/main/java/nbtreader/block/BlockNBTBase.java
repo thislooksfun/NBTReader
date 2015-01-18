@@ -42,10 +42,7 @@ public class BlockNBTBase extends BlockContainer
 	{
 		TileEntity tileEntity = world.getTileEntity(x, y, z);
 		
-		if (tileEntity == null || player.isSneaking())
-		{
-			return false;
-		}
+		if (tileEntity == null || player.isSneaking()) return false;
 		
 		player.openGui(NBTReader.instance(), world.getBlockMetadata(x, y, z), world, x, y, z);
 		return true;

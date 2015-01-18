@@ -10,9 +10,9 @@ import nbtreader.util.Colors;
  */
 public class GuiCustomButton extends GuiButton
 {
-	private int color = Colors.rgba(70, 150, 25, 255);
+	private int color = Colors.rgba(70, 150, 25);
 	private int textColor = Colors.rgb(224, 224, 224);
-	private int colorHover = Colors.rgba(90, 200, 40, 255);
+	private int colorHover = Colors.rgba(90, 200, 40);
 	private int textColorHover = Colors.rgb(255, 255, 255);
 	
 	public GuiCustomButton(int id, int width, int height, String str)

@@ -36,6 +36,7 @@ public class GuiOtherButton extends Gui
 		this.str = s;
 	}
 	
+	@SuppressWarnings("UnusedReturnValue")
 	public GuiOtherButton setPos(int left, int top)
 	{
 		this.left = left;
