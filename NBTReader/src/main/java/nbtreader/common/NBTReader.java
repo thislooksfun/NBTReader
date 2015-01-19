@@ -14,7 +14,7 @@ import nbtreader.block.BlockNBTBase;
 import nbtreader.handler.GuiHandler;
 import nbtreader.item.ItemNBTBlock;
 import nbtreader.network.PacketReaderInfo;
-import nbtreader.tileentity.TileEntityNBTBase;
+import nbtreader.tileentity.TileEntityNBTReader;
 import nbtreader.tileentity.TileEntityNBTSorter;
 import nbtreader.util.LogHelper;
 
@@ -45,7 +45,7 @@ public class NBTReader
 		
 		GameRegistry.registerBlock(nbtBlocks, ItemNBTBlock.class, "nbtreader.tile.nbtblock");
 		
-		GameRegistry.registerTileEntity(TileEntityNBTBase.class, "nbtreader:NBTTE");
+		GameRegistry.registerTileEntity(TileEntityNBTReader.class, "nbtreader:NBTTE");
 		GameRegistry.registerTileEntity(TileEntityNBTSorter.class, "nbtreader:NBTTESorter");
 		
 		this.network = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);

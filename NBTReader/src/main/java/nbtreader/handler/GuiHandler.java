@@ -7,7 +7,7 @@ import cpw.mods.fml.common.network.IGuiHandler;
 import nbtreader.client.gui.GuiReader;
 import nbtreader.client.gui.GuiSorter;
 import nbtreader.inventory.container.ContainerNBTBase;
-import nbtreader.tileentity.TileEntityNBTBase;
+import nbtreader.tileentity.TileEntityNBTReader;
 import nbtreader.tileentity.TileEntityNBTSorter;
 
 /**
@@ -21,7 +21,7 @@ public class GuiHandler implements IGuiHandler
 		switch (ID)
 		{
 			case 0:
-				return new ContainerNBTBase((TileEntityNBTBase)world.getTileEntity(x, y, z), player);
+				return new ContainerNBTBase((TileEntityNBTReader)world.getTileEntity(x, y, z), player);
 		}
 		
 		return null;
@@ -33,7 +33,7 @@ public class GuiHandler implements IGuiHandler
 		switch (ID)
 		{
 			case 0:
-				return new GuiReader((TileEntityNBTBase)world.getTileEntity(x, y, z), player);
+				return new GuiReader((TileEntityNBTReader)world.getTileEntity(x, y, z), player);
 			case 1:
 				return new GuiSorter((TileEntityNBTSorter)world.getTileEntity(x, y, z));
 		}

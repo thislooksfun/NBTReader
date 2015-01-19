@@ -6,16 +6,16 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import nbtreader.tileentity.TileEntityNBTBase;
+import nbtreader.tileentity.TileEntityNBTReader;
 
 /**
  * @author thislooksfun
  */
 public class ContainerNBTBase extends Container
 {
-	public final TileEntityNBTBase tile;
+	public final TileEntityNBTReader tile;
 	
-	public ContainerNBTBase(TileEntityNBTBase te, EntityPlayer player)
+	public ContainerNBTBase(TileEntityNBTReader te, EntityPlayer player)
 	{
 		this.tile = te;
 		this.addSlotToContainer(new CustomSlot(te, 0, 21, 154)); //Inventory slot
@@ -96,14 +96,14 @@ public class ContainerNBTBase extends Container
 		public void putStack(ItemStack p_75215_1_)
 		{
 			super.putStack(p_75215_1_);
-			((TileEntityNBTBase)this.inventory).triggerBool = true;
+			((TileEntityNBTReader)this.inventory).triggerBool = true;
 		}
 		
 		@Override
 		public void onSlotChanged()
 		{
 			super.onSlotChanged();
-			((TileEntityNBTBase)this.inventory).triggerBool = true;
+			((TileEntityNBTReader)this.inventory).triggerBool = true;
 		}
 	}
 }

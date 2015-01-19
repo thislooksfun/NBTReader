@@ -12,18 +12,11 @@ import net.minecraft.tileentity.TileEntity;
  *
  * @author thislooksfun
  */
-public class TileEntityNBTBase extends TileEntity implements ISidedInventory
+public class TileEntityNBTReader extends TileEntity implements ISidedInventory
 {
 	private static final int[] slotAccess = new int[]{0};
 	private ItemStack item;
 	public boolean triggerBool = false;
-	
-	private final String name;
-	
-	public TileEntityNBTBase(String name)
-	{
-		this.name = name;
-	}
 	
 	@Override
 	public int getSizeInventory()
@@ -40,7 +33,7 @@ public class TileEntityNBTBase extends TileEntity implements ISidedInventory
 	@Override
 	public String getInventoryName()
 	{
-		return this.name;
+		return "NBT Reader";
 	}
 	
 	@Override

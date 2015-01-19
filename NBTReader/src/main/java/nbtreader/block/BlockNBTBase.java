@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Random;
 
 import nbtreader.common.NBTReader;
-import nbtreader.tileentity.TileEntityNBTBase;
+import nbtreader.tileentity.TileEntityNBTReader;
 import nbtreader.tileentity.TileEntityNBTSorter;
 
 /**
@@ -162,7 +162,7 @@ public class BlockNBTBase extends BlockContainer
 		switch (meta)
 		{
 			case 0:
-				return new TileEntityNBTBase("NBT Reader");
+				return new TileEntityNBTReader();
 			case 1:
 				return new TileEntityNBTSorter();
 		}

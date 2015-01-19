@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 import nbtreader.common.NBTReader;
 import nbtreader.inventory.container.ContainerNBTBase;
-import nbtreader.tileentity.TileEntityNBTBase;
+import nbtreader.tileentity.TileEntityNBTReader;
 import nbtreader.util.ColorHelper;
 import nbtreader.util.Colors;
 import org.lwjgl.input.Mouse;
@@ -27,7 +27,7 @@ public class GuiReader extends GuiContainer
 	private ArrayList<String> displayStrings = new ArrayList<String>();
 	private int start = 0;
 	
-	public GuiReader(TileEntityNBTBase te, EntityPlayer player)
+	public GuiReader(TileEntityNBTReader te, EntityPlayer player)
 	{
 		super(new ContainerNBTBase(te, player));
 		this.xSize = 224;
@@ -49,8 +49,8 @@ public class GuiReader extends GuiContainer
 	{
 		super.drawGuiContainerForegroundLayer(p_146979_1_, p_146979_2_);
 		
-		drawRect(5, 5, this.xSize - 5, 146, Colors.rgba(0, 11, 121));
-		drawRect(5, 5, this.xSize - 5, 17, Colors.rgba(207, 0, 0));
+		drawRect(5, 5, this.xSize - 5, 146, Colors.argb(0, 11, 121));
+		drawRect(5, 5, this.xSize - 5, 17, Colors.argb(207, 0, 0));
 		
 		ItemStack stack = this.inventorySlots.getSlot(0).getStack();
 		this.drawString("Item: " + (stack == null ? "" : (stack.stackSize + " * " + stack.getDisplayName())), 7, 7);
@@ -85,13 +85,13 @@ public class GuiReader extends GuiContainer
 	
 	private void drawScrollBar()
 	{
-		drawRect(this.xSize - 9, 17, this.xSize - 5, 146, Colors.rgba(0, 150, 0));
+		drawRect(this.xSize - 9, 17, this.xSize - 5, 146, Colors.argb(0, 150, 0));
 		
 		int height = 15;
 		float percent = ((float)this.start / (this.displayStrings.size() - 14));
 		int offset = (int)(percent * (127 - height));
 		
-		drawRect(this.xSize - 8, 18 + offset, this.xSize - 6, 18 + offset + height, Colors.rgba(0, 255, 124));
+		drawRect(this.xSize - 8, 18 + offset, this.xSize - 6, 18 + offset + height, Colors.argb(0, 255, 124));
 	}
 	
 	private void checkDisplayStrings()

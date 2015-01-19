@@ -32,8 +32,6 @@ public class TileEntityNBTSorter extends TileEntity
 	
 	public ArrayList<ArrayList<String>> data = new ArrayList<ArrayList<String>>();
 	
-	private int stackPullSize = 64;
-	
 	/** True if matching all conditions, false if matching any */
 	public boolean matchType = true;
 	
@@ -70,113 +68,109 @@ public class TileEntityNBTSorter extends TileEntity
 	private void pullItems()
 	{
 		Coords c = this.getPos();
-		if (c == null) return; //The position hasn't been set!
+		if (c == null) return; //Position hasn't been set
 		
 		TileEntity teIn = c.getCoordsInDir(this.in).getTileEntity();
-		if (teIn == null || !(teIn instanceof IInventory)) return; //No TE or isn't an inventory!
-		IInventory invIn = ((IInventory)teIn);
-		
+		if (teIn == null || !(teIn instanceof IInventory)) return; //Null or not an inventory
 		TileEntity teOut = c.getCoordsInDir(this.out).getTileEntity();
-		if (teOut == null || !(teOut instanceof IInventory)) return; //No TE or isn't an inventory!
-		IInventory invOut = ((IInventory)teOut);
+		if (teOut == null || !(teOut instanceof IInventory)) return; //Null or not an inventory
 		
-		int cntPulled = 0;
+		IInventory invIn = (IInventory)teIn;
+		IInventory invOut = (IInventory)teOut;
 		
-		while (cntPulled < this.stackPullSize)
+		if (invIn instanceof ISidedInventory)
 		{
-			if (invIn instanceof ISidedInventory)
+			ISidedInventory sidedIn = (ISidedInventory)invIn;
+			for (int slot : sidedIn.getAccessibleSlotsFromSide(this.in.getOpposite().ordinal()))
 			{
-				for (int slot : ((ISidedInventory)invIn).getAccessibleSlotsFromSide(this.in.getOpposite().ordinal()))
+				ItemStack stack = sidedIn.getStackInSlot(slot);
+				if (stackMatches(stack))
 				{
-					ItemStack s = invIn.decrStackSize(slot, 1);
-					if (s != null && this.stackMatches(s))
-					{
-						if (mergeStacks(invOut, s))
-							cntPulled++;
-						else
-						{
-							invIn.getStackInSlot(slot).stackSize++;
-							cntPulled = this.stackPullSize;
-						}
-						break;
-					}
-				}
-			} else
-			{
-				for (int slot = 0; slot < invIn.getSizeInventory(); slot++)
-				{
-					ItemStack s = invIn.decrStackSize(slot, 1);
-					if (s != null && this.stackMatches(s))
-					{
-						if (mergeStacks(invOut, s))
-							cntPulled++;
-						else
-						{
-							invIn.getStackInSlot(slot).stackSize++;
-							cntPulled = this.stackPullSize;
-						}
-						break;
-					}
-				}
-			}
-		}
-	}
-	
-	private boolean mergeStacks(IInventory inv, ItemStack stack)
-	{
-		if (stack == null) return false;
-		
-		if (inv instanceof ISidedInventory)
-		{
-			int[] availSlots = ((ISidedInventory)inv).getAccessibleSlotsFromSide(this.out.getOpposite().ordinal());
-			for (int slot : availSlots)
-			{
-				ItemStack s = inv.getStackInSlot(slot);
-				if (s != null && s.getItem() == stack.getItem() && s.stackSize + stack.stackSize <= s.getMaxStackSize())
-				{
-					s.stackSize += stack.stackSize;
-					return true;
-				}
-			}
-			
-			for (int slot : availSlots)
-			{
-				ItemStack s = inv.getStackInSlot(slot);
-				if (s == null)
-				{
-					inv.setInventorySlotContents(slot, stack);
-					return true;
+					this.transferSome(invOut, stack);
+					break;
 				}
 			}
 		} else
 		{
-			for (int i = 0; i < inv.getSizeInventory(); i++)
+			for (int slot = 0; slot < invIn.getSizeInventory(); slot++)
 			{
-				ItemStack s = inv.getStackInSlot(i);
-				if (s != null && s.getItem() == stack.getItem() && s.stackSize + stack.stackSize <= s.getMaxStackSize())
+				ItemStack stack = invIn.getStackInSlot(slot);
+				if (stackMatches(stack))
 				{
-					s.stackSize += stack.stackSize;
-					return true;
-				}
-			}
-			
-			for (int i = 0; i < inv.getSizeInventory(); i++)
-			{
-				ItemStack s = inv.getStackInSlot(i);
-				if (s == null)
-				{
-					inv.setInventorySlotContents(i, stack);
-					return true;
+					invIn.setInventorySlotContents(slot, this.transferSome(invOut, stack));
+					break;
 				}
 			}
 		}
+	}
+	
+	private ItemStack transferSome(IInventory inv, ItemStack stack)
+	{
+		if (inv instanceof ISidedInventory)
+		{
+			ISidedInventory sidedInv = (ISidedInventory)inv;
+			for (int slot : sidedInv.getAccessibleSlotsFromSide(this.in.getOpposite().ordinal()))
+			{
+				if (inv.getStackInSlot(slot) != null)
+				{
+					stack = this.addStackToSlot(inv, slot, stack);
+					if (stack == null) return null;
+				}
+			}
+			
+			for (int slot : sidedInv.getAccessibleSlotsFromSide(this.in.getOpposite().ordinal()))
+			{
+				stack = this.addStackToSlot(inv, slot, stack);
+				if (stack == null) return null;
+			}
+		} else
+		{
+			//First look for slots with things in them, to try to fill partial stacks
+			for (int slot = 0; slot < inv.getSizeInventory(); slot++)
+			{
+				if (inv.getStackInSlot(slot) != null)
+				{
+					stack = this.addStackToSlot(inv, slot, stack);
+					if (stack == null) return null;
+				}
+			}
+			
+			//Then look for all stacks, regardless
+			for (int slot = 0; slot < inv.getSizeInventory(); slot++)
+			{
+				stack = this.addStackToSlot(inv, slot, stack);
+				if (stack == null) return null;
+			}
+		}
 		
-		return false;
+		return stack;
+	}
+	
+	/** Returns true if all items were successfully added to the slot, false otherwise */
+	private ItemStack addStackToSlot(IInventory inv, int slot, ItemStack stack)
+	{
+		ItemStack curr = inv.getStackInSlot(slot);
+		if (curr == null && inv.isItemValidForSlot(slot, stack))
+		{
+			inv.setInventorySlotContents(slot, stack);
+			stack = null;
+		} else if (curr != null && curr.stackSize < curr.getMaxStackSize() && curr.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(curr, stack))
+		{
+			while (curr.stackSize < curr.getMaxStackSize() && stack.stackSize > 0)
+			{
+				curr.stackSize++;
+				stack.stackSize--;
+			}
+			
+			if (stack.stackSize == 0) stack = null;
+		}
+		
+		return stack;
 	}
 	
 	private boolean stackMatches(ItemStack stack)
 	{
-		if (!stack.hasTagCompound()) return false; //No tag == nothing to compare
+		if (stack == null || !stack.hasTagCompound()) return false; //Null or no tag
 		
 		boolean match = false;
 		

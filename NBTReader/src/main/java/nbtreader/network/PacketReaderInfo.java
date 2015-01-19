@@ -45,7 +45,6 @@ public class PacketReaderInfo implements IMessage
 	@Override
 	public void fromBytes(ByteBuf buf)
 	{
-		
 		this.pos = Coords.fromString(ByteBufUtils.readUTF8String(buf)); //Position
 		this.tag = ByteBufUtils.readTag(buf); //NBTData
 	}
@@ -60,7 +59,8 @@ public class PacketReaderInfo implements IMessage
 		@Override
 		public IMessage onMessage(PacketReaderInfo message, MessageContext ctx)
 		{
-			((TileEntityNBTSorter)message.pos.getTileEntity()).onClientPacket(message);
+			if (message != null && message.pos != null && message.pos.hasTileEntity())
+				((TileEntityNBTSorter)message.pos.getTileEntity()).onClientPacket(message);
 			return null; //Response
 		}
 	}
