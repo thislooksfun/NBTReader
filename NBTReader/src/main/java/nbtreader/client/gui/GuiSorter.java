@@ -102,7 +102,7 @@ public class GuiSorter extends GuiScreen
 	
 	private void loadData(ArrayList<ArrayList<String>> data)
 	{
-		LogHelper.info("Loading "+data.size()+" items");
+		LogHelper.info("Loading " + data.size() + " items");
 		for (ArrayList<String> arr : data)
 			this.groups.add(new GuiSelectGroup(this.top, this.left, this.xSize, this.ySize, 14, arr));
 	}
