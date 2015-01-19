@@ -28,7 +28,7 @@ import cpw.mods.fml.relauncher.Side;
 public class NBTReader
 {
 	public static final String NAME = "NBT Reader";
-	public static final String MODID = "com/tlf/nbtreader";
+	public static final String MODID = "nbtreader";
 	public static final String VERSION = "1.0.0";
 	
 	public static Block nbtBlocks;
