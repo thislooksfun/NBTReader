@@ -1,7 +1,17 @@
 package com.tlf.nbtreader.common;
 
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 
+import com.tlf.nbtreader.block.BlockNBTBase;
+import com.tlf.nbtreader.handler.GuiHandler;
+import com.tlf.nbtreader.item.ItemNBTBlock;
+import com.tlf.nbtreader.network.PacketReaderInfo;
+import com.tlf.nbtreader.tileentity.TileEntityNBTReader;
+import com.tlf.nbtreader.tileentity.TileEntityNBTSorter;
+import com.tlf.nbtreader.util.LogHelper;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
@@ -10,13 +20,6 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
-import com.tlf.nbtreader.block.BlockNBTBase;
-import com.tlf.nbtreader.handler.GuiHandler;
-import com.tlf.nbtreader.item.ItemNBTBlock;
-import com.tlf.nbtreader.network.PacketReaderInfo;
-import com.tlf.nbtreader.tileentity.TileEntityNBTReader;
-import com.tlf.nbtreader.tileentity.TileEntityNBTSorter;
-import com.tlf.nbtreader.util.LogHelper;
 
 /**
  * @author thislooksfun
@@ -41,12 +44,15 @@ public class NBTReader
 	{
 		LogHelper.init(event.getModLog());
 		
-		nbtBlocks = new BlockNBTBase().setBlockName("com.tlf.nbtreader:nbtblock");
+		nbtBlocks = new BlockNBTBase().setBlockName("nbtreader:nbtblock");
 		
-		GameRegistry.registerBlock(nbtBlocks, ItemNBTBlock.class, "com.tlf.nbtreader.tile.nbtblock");
+		GameRegistry.registerBlock(nbtBlocks, ItemNBTBlock.class, "nbtreader.tile.nbtblock");
 		
-		GameRegistry.registerTileEntity(TileEntityNBTReader.class, "com.tlf.nbtreader:NBTTE");
-		GameRegistry.registerTileEntity(TileEntityNBTSorter.class, "com.tlf.nbtreader:NBTTESorter");
+		GameRegistry.registerTileEntity(TileEntityNBTReader.class, "nbtreader:NBTTE");
+		GameRegistry.registerTileEntity(TileEntityNBTSorter.class, "nbtreader:NBTTESorter");
+		
+		GameRegistry.addRecipe(new ItemStack(nbtBlocks, 1, 0), "srs", "rbr", "srs", 's', Blocks.stone, 'r', Items.redstone, 'b', Items.book);
+		GameRegistry.addRecipe(new ItemStack(nbtBlocks, 1, 1), "h", "r", "h", 'h', Blocks.hopper, 'r', new ItemStack(nbtBlocks, 1, 0));
 		
 		this.network = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
 		this.network.registerMessage(PacketReaderInfo.Handler.class, PacketReaderInfo.class, 0, Side.SERVER);
