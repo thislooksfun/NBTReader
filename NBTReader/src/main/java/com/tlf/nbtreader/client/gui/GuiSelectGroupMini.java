@@ -14,7 +14,7 @@ public class GuiSelectGroupMini extends Gui
 {
 	private FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
 	
-	private int color = Colors.argb(255, 0, 0);
+	private int color = Colors.rgb(255, 0, 0);
 	
 	private int top;
 	private int left;
@@ -29,7 +29,7 @@ public class GuiSelectGroupMini extends Gui
 	{
 		this.height = height;
 		
-		this.removeThis = new GuiOtherButton(8, 10, "-").setColor(Colors.argb(0, 200, 0)).setTextColor(Colors.TEXT_COLOR);
+		this.removeThis = new GuiOtherButton(8, 10, "-").setColor(Colors.rgb(0, 200, 0)).setTextColor(Colors.TEXT_COLOR);
 	}
 	
 	public void setString(String s)

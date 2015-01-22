@@ -10,9 +10,9 @@ import com.tlf.nbtreader.util.Colors;
  */
 public class GuiCustomButton extends GuiButton
 {
-	private int color = Colors.argb(70, 150, 25);
+	private int color = Colors.rgb(70, 150, 25);
 	private int textColor = Colors.rgb(224, 224, 224);
-	private int colorHover = Colors.argb(90, 200, 40);
+	private int colorHover = Colors.rgb(90, 200, 40);
 	private int textColorHover = Colors.rgb(255, 255, 255);
 	
 	public GuiCustomButton(int id, int width, int height, String str)
