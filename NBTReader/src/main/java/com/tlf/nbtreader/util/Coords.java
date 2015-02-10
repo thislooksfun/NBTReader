@@ -171,7 +171,7 @@ public class Coords
 	
 	public static Coords fromString(String s)
 	{
-		if (!s.matches("\\(\\d+: \\d+, \\d+, \\d+\\)")) return null;
+		if (!s.matches("^\\(-{0,1}\\d+: -{0,1}\\d+, -{0,1}\\d+, -{0,1}\\d+\\)$")) return null;
 		
 		s = s.substring(1, s.length() - 1);
 		
